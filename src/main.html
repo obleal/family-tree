@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Family Tree</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f2f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+            overflow: auto; /* Allow scrolling if content overflows */
+        }
+        .container {
+            background-color: #ffffff;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            max-width: 1200px;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+        canvas {
+            border: 1px solid #ddd;
+            background-color: #f9f9f9;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            max-width: 100%; /* Ensure canvas scales within its container */
+            height: auto; /* Maintain aspect ratio */
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 2.5rem;
+            font-weight: 700;
+        }
+        p {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 1.1rem;
+        }
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2rem;
+            }
+            p {
+                font-size: 1rem;
+            }
+            .container {
+                padding: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Our Family Tree</h1>
+        <p>Explore the connections that bind us together through generations.</p>
+        <canvas id="familyTreeCanvas"></canvas>
+        <p class="mt-8 text-sm text-gray-500">
+            This visual representation helps us understand our lineage and heritage.
+            <br>
+            You can modify the `familyData` array in the JavaScript to build your full family tree.
+        </p>
+    </div>
+
+    <script>
+        // Get the canvas element and its 2D rendering context
+        const canvas = document.getElementById('familyTreeCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // Define a base scale for drawing, which will be adjusted for responsiveness
+        const BASE_WIDTH = 1500; // Increased base width for more space
+        const BASE_HEIGHT = 1200; // Increased base height for more space
+
+        // Raw family data (simulating a JSON file)
+        const familyData = [
+            { id: 'central_ancestor', name: 'Central Ancestor', dateOfBirth: '1900-01-01', parent: null, color: '#FFDDC1' },
+
+            // Children (Generation 1)
+            { id: 'child1', name: 'Child 1', dateOfBirth: '1925-05-10', parent: 'central_ancestor', color: '#C1DFFD' },
+            { id: 'child2', name: 'Child 2', dateOfBirth: '1928-11-20', parent: 'central_ancestor', color: '#C1DFFD' },
+            { id: 'child3', name: 'Child 3', dateOfBirth: '1932-03-15', parent: 'central_ancestor', color: '#C1DFFD' },
+            { id: 'child4', name: 'Child 4', dateOfBirth: '1935-08-01', parent: 'central_ancestor', color: '#C1DFFD' },
+            { id: 'child5', name: 'Child 5', dateOfBirth: '1938-02-28', parent: 'central_ancestor', color: '#C1DFFD' },
+
+            // Grandchildren (Generation 2)
+            // Child 1's descendants
+            { id: 'grandchild1_1', name: 'Grandchild 1.1', dateOfBirth: '1950-07-22', parent: 'child1', color: '#D1C1FD' },
+            { id: 'grandchild1_2', name: 'Grandchild 1.2', dateOfBirth: '1953-09-01', parent: 'child1', color: '#D1C1FD' },
+            { id: 'grandchild1_3', name: 'Grandchild 1.3', dateOfBirth: '1956-04-18', parent: 'child1', color: '#D1C1FD' },
+            // Child 2's descendants
+            { id: 'grandchild2_1', name: 'Grandchild 2.1', dateOfBirth: '1955-02-14', parent: 'child2', color: '#D1C1FD' },
+            { id: 'grandchild2_2', name: 'Grandchild 2.2', dateOfBirth: '1958-06-25', parent: 'child2', color: '#D1C1FD' },
+            // Child 3's descendants
+            { id: 'grandchild3_1', name: 'Grandchild 3.1', dateOfBirth: '1960-01-05', parent: 'child3', color: '#D1C1FD' },
+            { id: 'grandchild3_2', name: 'Grandchild 3.2', dateOfBirth: '1963-08-11', parent: 'child3', color: '#D1C1FD' },
+            { id: 'grandchild3_3', name: 'Grandchild 3.3', dateOfBirth: '1965-12-01', parent: 'child3', color: '#D1C1FD' },
+            // Child 4's descendants
+            { id: 'grandchild4_1', name: 'Grandchild 4.1', dateOfBirth: '1962-04-20', parent: 'child4', color: '#D1C1FD' },
+            // Child 5's descendants
+            { id: 'grandchild5_1', name: 'Grandchild 5.1', dateOfBirth: '1968-09-10', parent: 'child5', color: '#D1C1FD' },
+            { id: 'grandchild5_2', name: 'Grandchild 5.2', dateOfBirth: '1970-11-05', parent: 'child5', color: '#D1C1FD' },
+
+            // Great-Grandchildren (Generation 3)
+            // Grandchild 1.1's descendants
+            { id: 'greatgrandchild1_1_1', name: 'G-Grandchild 1.1.1', dateOfBirth: '1980-03-03', parent: 'grandchild1_1', color: '#A1E8F0' },
+            { id: 'greatgrandchild1_1_2', name: 'G-Grandchild 1.1.2', dateOfBirth: '1982-05-10', parent: 'grandchild1_1', color: '#A1E8F0' },
+            // Grandchild 1.2's descendants
+            { id: 'greatgrandchild1_2_1', name: 'G-Grandchild 1.2.1', dateOfBirth: '1983-01-20', parent: 'grandchild1_2', color: '#A1E8F0' },
+            // Grandchild 1.3's descendants
+            { id: 'greatgrandchild1_3_1', name: 'G-Grandchild 1.3.1', dateOfBirth: '1985-04-05', parent: 'grandchild1_3', color: '#A1E8F0' },
+            // Grandchild 2.1's descendants
+            { id: 'greatgrandchild2_1_1', name: 'G-Grandchild 2.1.1', dateOfBirth: '1985-07-15', parent: 'grandchild2_1', color: '#A1E8F0' },
+            // Grandchild 2.2's descendants
+            { id: 'greatgrandchild2_2_1', name: 'G-Grandchild 2.2.1', dateOfBirth: '1987-09-20', parent: 'grandchild2_2', color: '#A1E8F0' },
+            // Grandchild 2.3's descendants
+            { id: 'greatgrandchild2_3_1', name: 'G-Grandchild 2.3.1', dateOfBirth: '1990-11-12', parent: 'grandchild2_3', color: '#A1E8F0' },
+            // Grandchild 3.1's descendants
+            { id: 'greatgrandchild3_1_1', name: 'G-Grandchild 3.1.1', dateOfBirth: '1988-02-28', parent: 'grandchild3_1', color: '#A1E8F0' },
+            // Grandchild 3.2's descendants
+            { id: 'greatgrandchild3_2_1', name: 'G-Grandchild 3.2.1', dateOfBirth: '1991-06-07', parent: 'grandchild3_2', color: '#A1E8F0' },
+            // Grandchild 3.3's descendants
+            { id: 'greatgrandchild3_3_1', name: 'G-Grandchild 3.3.1', dateOfBirth: '1992-01-01', parent: 'grandchild3_3', color: '#A1E8F0' },
+            { id: 'greatgrandchild3_3_2', name: 'G-Grandchild 3.3.2', dateOfBirth: '1994-03-03', parent: 'grandchild3_3', color: '#A1E8F0' },
+            // Grandchild 4.1's descendants
+            { id: 'greatgrandchild4_1_1', name: 'G-Grandchild 4.1.1', dateOfBirth: '1989-05-15', parent: 'grandchild4_1', color: '#A1E8F0' },
+            { id: 'greatgrandchild4_1_2', name: 'G-Grandchild 4.1.2', dateOfBirth: '1991-07-25', parent: 'grandchild4_1', color: '#A1E8F0' },
+            // Grandchild 5.1's descendants
+            { id: 'greatgrandchild5_1_1', name: 'G-Grandchild 5.1.1', dateOfBirth: '1995-08-08', parent: 'grandchild5_1', color: '#A1E8F0' },
+            // Grandchild 5.2's descendants
+            { id: 'greatgrandchild5_2_1', name: 'G-Grandchild 5.2.1', dateOfBirth: '1997-10-10', parent: 'grandchild5_2', color: '#A1E8F0' },
+
+            // Great-Great-Grandchildren (Generation 4)
+            // G-Grandchild 1.1.1's descendants
+            { id: 'greatgreatgrandchild1_1_1_1', name: 'GG-Grandchild 1.1.1.1', dateOfBirth: '2005-01-01', parent: 'greatgrandchild1_1_1', color: '#B0E0E6' },
+            { id: 'greatgreatgrandchild1_1_1_2', name: 'GG-Grandchild 1.1.1.2', dateOfBirth: '2007-02-02', parent: 'greatgrandchild1_1_1', color: '#B0E0E6' },
+            // G-Grandchild 1.2.1's descendants
+            { id: 'greatgreatgrandchild1_2_1_1', name: 'GG-Grandchild 1.2.1.1', dateOfBirth: '2008-04-04', parent: 'greatgrandchild1_2_1', color: '#B0E0E6' },
+            // G-Grandchild 2.1.1's descendants
+            { id: 'greatgreatgrandchild2_1_1_1', name: 'GG-Grandchild 2.1.1.1', dateOfBirth: '2010-03-03', parent: 'greatgrandchild2_1_1', color: '#B0E0E6' },
+            // G-Grandchild 3.3.1's descendants
+            { id: 'greatgreatgrandchild3_3_1_1', name: 'GG-Grandchild 3.3.1.1', dateOfBirth: '2012-05-05', parent: 'greatgrandchild3_3_1', color: '#B0E0E6' },
+            // G-Grandchild 4.1.1's descendants
+            { id: 'greatgreatgrandchild4_1_1_1', name: 'GG-Grandchild 4.1.1.1', dateOfBirth: '2015-06-06', parent: 'greatgrandchild4_1_1', color: '#B0E0E6' },
+        ];
+
+        let processedNodes = [];
+        let processedLinks = [];
+
+        // Function to calculate generations and create links from raw family data
+        function processFamilyData(data) {
+            // Clear previous data before processing new data
+            processedNodes = [];
+            processedLinks = [];
+
+            const nodesMap = new Map(); // To quickly find nodes by ID
+            const rootNode = data.find(member => member.parent === null);
+
+            if (!rootNode) {
+                console.error("No central ancestor found (node with parent: null).");
+                return { nodes: [], links: [] };
+            }
+
+            // Initialize nodes with basic properties and map them
+            data.forEach(member => {
+                const node = {
+                    id: member.id,
+                    text: member.name, // Use 'name' for display
+                    dateOfBirth: member.dateOfBirth, // Keep other data if needed
+                    parent_id: member.parent,
+                    color: member.color || '#999999', // Default color if not specified
+                    generation: -1, // Will be calculated
+                    x: 0, y: 0, r: 0, // Will be calculated
+                    angle: 0, // Will be calculated
+                    branchArcWidth: 0 // Will be calculated
+                };
+                nodesMap.set(member.id, node);
+                processedNodes.push(node);
+            });
+
+            // Calculate generations using a breadth-first approach
+            const queue = [{ id: rootNode.id, generation: 0 }];
+            const visited = new Set();
+
+            while (queue.length > 0) {
+                const { id, generation } = queue.shift();
+                if (visited.has(id)) continue;
+
+                visited.add(id);
+                const currentNode = nodesMap.get(id);
+                if (currentNode) {
+                    currentNode.generation = generation;
+                }
+
+                // Find children of the current node
+                data.filter(member => member.parent === id).forEach(child => {
+                    processedLinks.push({ source: id, target: child.id });
+                    if (!visited.has(child.id)) {
+                        queue.push({ id: child.id, generation: generation + 1 });
+                    }
+                });
+            }
+
+            return { nodes: processedNodes, links: processedLinks };
+        }
+
+        // Function to draw the family tree
+        function drawFamilyTree() {
+            // Clear the canvas before redrawing
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Process data to get nodes with generations and links
+            const { nodes, links } = processFamilyData(familyData);
+
+            // Calculate current scale based on canvas width
+            const scaleX = canvas.width / BASE_WIDTH;
+            const scaleY = canvas.height / BASE_HEIGHT;
+            const scale = Math.min(scaleX, scaleY); // Use the smaller scale to fit content
+
+            // Configuration for concentric circles
+            const centerX = BASE_WIDTH / 2;
+            const centerY = BASE_HEIGHT / 2;
+            const radiusIncrement = 150; // Distance between generations
+            const nodeRadius = 30; // Base radius for each node circle
+
+            // Helper function to find a node by its ID
+            const findNode = (id) => nodes.find(node => node.id === id);
+
+            // 1. Position Central Ancestor (Generation 0)
+            const centralAncestor = nodes.find(node => node.generation === 0);
+            if (centralAncestor) {
+                centralAncestor.x = centerX;
+                centralAncestor.y = centerY;
+                centralAncestor.r = nodeRadius + 10; // Slightly larger for central
+                centralAncestor.angle = 0; // Reference angle
+                centralAncestor.branchArcWidth = Math.PI * 2; // Full circle for its children
+            }
+
+            // Iterate through generations starting from 1 to position all nodes
+            const maxGeneration = Math.max(...nodes.map(node => node.generation));
+            for (let gen = 1; gen <= maxGeneration; gen++) {
+                const currentGenerationNodes = nodes.filter(node => node.generation === gen);
+
+                // Group nodes by their parent for this generation
+                const nodesGroupedByParent = {};
+                currentGenerationNodes.forEach(node => {
+                    if (!nodesGroupedByParent[node.parent_id]) {
+                        nodesGroupedByParent[node.parent_id] = [];
+                    }
+                    nodesGroupedByParent[node.parent_id].push(node);
+                });
+
+                for (const parentId in nodesGroupedByParent) {
+                    const parentNode = findNode(parentId);
+                    const childrenOfThisParent = nodesGroupedByParent[parentId];
+
+                    if (!parentNode) {
+                        console.error(`Parent not found for children of: ${parentId}`);
+                        continue;
+                    }
+
+                    const currentRadius = gen * radiusIncrement;
+                    const parentAngle = parentNode.angle;
+                    const parentBranchArcWidth = parentNode.branchArcWidth;
+
+                    // Calculate the start angle for this parent's arc on the current generation's circle
+                    // The arc is centered around the parent's angle
+                    const startAngleForArc = parentAngle - (parentBranchArcWidth / 2);
+
+                    // Distribute children evenly within this arc
+                    // +1 for spacing at the beginning and end of the arc
+                    const angleStepWithinArc = parentBranchArcWidth / (childrenOfThisParent.length + 1);
+
+                    childrenOfThisParent.forEach((node, index) => {
+                        const nodeAngle = startAngleForArc + (index + 1) * angleStepWithinArc;
+                        node.x = centerX + currentRadius * Math.cos(nodeAngle);
+                        node.y = centerY + currentRadius * Math.sin(nodeAngle);
+                        node.r = nodeRadius;
+                        node.angle = nodeAngle; // Store angle for this node
+                        node.branchArcWidth = angleStepWithinArc; // This node's slice for its own children
+                    });
+                }
+            }
+
+
+            // --- Draw concentric dashed circles for each generation ---
+            ctx.strokeStyle = '#aaa'; // Light grey for the circles
+            ctx.lineWidth = 1 * scale; // Thin line
+            ctx.setLineDash([5, 5]); // Dashed line pattern (5px dash, 5px gap)
+
+            // Get unique generation numbers, excluding 0 (central ancestor)
+            const uniqueGenerations = [...new Set(nodes.map(node => node.generation))].sort((a, b) => a - b);
+
+            uniqueGenerations.forEach(gen => {
+                if (gen > 0) { // Don't draw a circle for generation 0 (central ancestor)
+                    const circleRadius = gen * radiusIncrement;
+                    ctx.beginPath();
+                    ctx.arc(centerX * scale, centerY * scale, circleRadius * scale, 0, Math.PI * 2);
+                    ctx.stroke();
+                }
+            });
+
+            ctx.setLineDash([]); // Reset line dash to solid for subsequent drawings (links, nodes)
+
+            // --- Draw links ---
+            ctx.strokeStyle = '#888';
+            ctx.lineWidth = 2 * scale;
+            links.forEach(link => {
+                const sourceNode = findNode(link.source);
+                const targetNode = findNode(link.target);
+
+                if (sourceNode && targetNode && sourceNode.x !== undefined && targetNode.x !== undefined) {
+                    ctx.beginPath();
+                    ctx.moveTo(sourceNode.x * scale, sourceNode.y * scale);
+                    ctx.lineTo(targetNode.x * scale, targetNode.y * scale);
+                    ctx.stroke();
+                }
+            });
+
+            // --- Draw nodes ---
+            nodes.forEach(node => {
+                // Draw circle
+                ctx.beginPath();
+                ctx.arc(node.x * scale, node.y * scale, node.r * scale, 0, Math.PI * 2);
+                ctx.fillStyle = node.color;
+                ctx.fill();
+                ctx.strokeStyle = '#555';
+                ctx.lineWidth = 1 * scale;
+                ctx.stroke();
+
+                // Draw text
+                ctx.fillStyle = '#333';
+                ctx.font = `${Math.max(8, 12 * scale)}px Inter, sans-serif`; // Adjust font size based on scale
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                const textLines = node.text.split(' '); // Split text for multi-line display if needed
+                const lineHeight = Math.max(8, 14 * scale);
+                let yOffset = -(textLines.length - 1) * lineHeight / 2;
+
+                textLines.forEach((line, index) => {
+                    ctx.fillText(line, node.x * scale, node.y * scale + yOffset + index * lineHeight);
+                });
+            });
+        }
+
+        // Function to set canvas dimensions and redraw
+        function setupCanvas() {
+            const container = document.querySelector('.container');
+            // Set canvas width to fill its container, up to BASE_WIDTH
+            canvas.width = Math.min(BASE_WIDTH, container.clientWidth - 40); // 40 for padding
+            // Calculate height to maintain aspect ratio, or use BASE_HEIGHT if width is maxed
+            canvas.height = (canvas.width / BASE_WIDTH) * BASE_HEIGHT;
+            // Ensure a minimum height for very small screens
+            if (canvas.height < 300) {
+                canvas.height = 300;
+            }
+            drawFamilyTree();
+        }
+
+        // Initial setup and draw
+        window.addEventListener('load', setupCanvas);
+        // Redraw on window resize to make it responsive
+        window.addEventListener('resize', setupCanvas);
+
+    </script>
+</body>
+</html>
